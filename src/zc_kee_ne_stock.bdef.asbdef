@@ -1,0 +1,33 @@
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_KEE_NE_STOCK
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use association _Action
+  {
+    create;
+    with draft;
+  }
+}
+
+define behavior for ZC_KEE_NE_ACTION
+{
+  use update;
+  use delete;
+
+  use association _Stock
+  {
+    with draft;
+  }
+}

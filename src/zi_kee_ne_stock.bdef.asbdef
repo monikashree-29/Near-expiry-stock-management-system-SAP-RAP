@@ -1,0 +1,228 @@
+managed implementation in class zbp_i_kee_ne_stock unique;
+
+strict ( 2 );
+
+with draft;
+
+
+/*--------------------------------------------------------------------
+  ROOT ENTITY : STOCK
+  --------------------------------------------------------------------*/
+
+define behavior for ZI_KEE_NE_STOCK alias Stock
+
+persistent table zkee_ne_stock
+draft table zkee_ne_stock_d
+
+lock master
+
+total etag LastChangedAt
+etag master LocalLastChangedAt
+
+authorization master ( none )
+
+{
+  /*---------------------------------------------------------------
+    Basic CRUD operations
+    ---------------------------------------------------------------*/
+
+  create;
+  update;
+  delete;
+
+
+  /*---------------------------------------------------------------
+    Key fields cannot be changed after creation
+    ---------------------------------------------------------------*/
+
+  field ( readonly : update )
+    MaterialId,
+    BatchNo;
+
+
+  /*---------------------------------------------------------------
+    Calculated fields
+    These values are maintained by the determination
+    ---------------------------------------------------------------*/
+
+  field ( readonly )
+    RemainingDays,
+    ExpiryStatus,
+    Priority,
+    RecommendedAction;
+
+
+  /*---------------------------------------------------------------
+    Composition to Action
+    Action records are created through Stock -> _Action
+    ---------------------------------------------------------------*/
+
+  association _Action
+  {
+    create;
+    with draft;
+  }
+
+
+  /*---------------------------------------------------------------
+    Validation
+    Expiry Date must not be earlier than Manufacture Date
+    ---------------------------------------------------------------*/
+
+  validation validateDates on save
+  {
+    create;
+    field
+      ManufactureDate,
+      ExpiryDate;
+  }
+
+
+  /*---------------------------------------------------------------
+    Determination
+    Calculates:
+      RemainingDays
+      ExpiryStatus
+      Priority
+      RecommendedAction
+    ---------------------------------------------------------------*/
+
+  determination CalculateRemainingDays on modify
+  {
+    create;
+    field
+      ManufactureDate,
+      ExpiryDate;
+  }
+
+
+  /*---------------------------------------------------------------
+    Draft actions
+    ---------------------------------------------------------------*/
+
+  draft action Edit;
+
+  draft action Activate optimized;
+
+  draft action Discard;
+
+  draft action Resume;
+
+
+  /*---------------------------------------------------------------
+    Prepare action
+    Validation is executed before activation
+    ---------------------------------------------------------------*/
+
+  draft determine action Prepare
+  {
+    validation validateDates;
+  }
+
+
+  /*---------------------------------------------------------------
+    Mapping to database table
+    ---------------------------------------------------------------*/
+
+  mapping for zkee_ne_stock
+  {
+    MaterialId         = material_id;
+    BatchNo            = batch_no;
+
+    ManufactureDate    = manufacture_date;
+    ExpiryDate         = expiry_date;
+
+    Quantity           = quantity;
+    Unit               = unit;
+
+    Plant               = plant;
+    StorageLocation     = storage_location;
+    Vendor              = vendor;
+
+    RemainingDays       = remaining_days;
+    ExpiryStatus        = expiry_status;
+    Priority            = priority;
+    RecommendedAction   = recommended_action;
+
+    LocalCreatedBy      = local_created_by;
+    LocalCreatedAt      = local_created_at;
+
+    LocalLastChangedBy  = local_last_changed_by;
+    LocalLastChangedAt  = local_last_changed_at;
+
+    LastChangedAt       = last_changed_at;
+  }
+
+}
+
+
+/*--------------------------------------------------------------------
+  CHILD ENTITY : ACTION
+  --------------------------------------------------------------------*/
+
+define behavior for ZI_KEE_NE_ACTION
+
+persistent table zkee_ne_action
+draft table zkee_ne_action_d
+
+lock dependent by _Stock
+
+authorization dependent by _Stock
+
+{
+  /*---------------------------------------------------------------
+    Direct creation is NOT allowed here.
+
+    Action is created through the parent:
+      Stock -> _Action
+    ---------------------------------------------------------------*/
+
+  update;
+  delete;
+
+
+  /*---------------------------------------------------------------
+    These fields cannot be changed manually
+    ---------------------------------------------------------------*/
+
+  field ( readonly )
+
+    MaterialId,
+    BatchNo;
+
+
+  /*---------------------------------------------------------------
+    Association back to parent Stock
+    ---------------------------------------------------------------*/
+
+  association _Stock
+  {
+    with draft;
+  }
+
+
+  /*---------------------------------------------------------------
+    Mapping to database table
+    ---------------------------------------------------------------*/
+
+  mapping for zkee_ne_action
+  {
+    ActionId           = action_id;
+
+    MaterialId         = material_id;
+    BatchNo            = batch_no;
+
+    Priority           = priority;
+    RecommendedAction  = recommended_action;
+    ActionStatus       = action_status;
+
+    LocalCreatedBy     = local_created_by;
+    LocalCreatedAt     = local_created_at;
+
+    LocalLastChangedBy = local_last_changed_by;
+    LocalLastChangedAt = local_last_changed_at;
+
+    LastChangedAt      = last_changed_at;
+  }
+
+}

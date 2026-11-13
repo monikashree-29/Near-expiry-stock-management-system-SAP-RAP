@@ -1,0 +1,5 @@
+CLASS zbp_i_kee_ne_stock DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_kee_ne_stock.
+ENDCLASS.
+
+CLASS zbp_i_kee_ne_stock IMPLEMENTATION.
+ENDCLASS.

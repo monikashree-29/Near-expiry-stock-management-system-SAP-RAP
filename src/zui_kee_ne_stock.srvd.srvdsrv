@@ -1,0 +1,5 @@
+@EndUserText.label: 'Near Expiry Stock Monitoring Service'
+define service ZUI_KEE_NE_STOCK {
+  expose ZC_kee_NE_STOCK  as Stock;
+  expose ZC_kee_NE_ACTION as Action;
+}
